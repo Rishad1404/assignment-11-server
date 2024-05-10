@@ -61,6 +61,31 @@ async function run() {
         const result=await assignmentCollection.deleteOne(query)
         res.send(result)
       })
+    
+    // Update Assignment
+    app.get('/singleAssignment/:id',async(req,res)=>{
+        console.log(req.params.id)
+        const result=await assignmentCollection.findOne({_id:new ObjectId(req.params.id)})
+        res.send(result)
+      })
+
+    app.put('/updateAssignment/:id',async(req,res)=>{
+        const id=req.params.id;
+        const query={_id:new ObjectId(req.params.id)}
+        const assignment={
+          $set:{
+            title:req.body.title,
+            description:req.body.description,
+            thumbnail:req.body.thumbnail,
+            mark:req.body.mark,
+            difficulty:req.body.difficulty,
+            due:req.body.due
+          }
+        }
+        const result=await assignmentCollection.updateOne(query,assignment)
+        console.log(result)
+        res.send(result)
+      })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
