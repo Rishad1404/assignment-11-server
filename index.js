@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express()
 require('dotenv').config()
 const port=process.env.PORT||5000;
@@ -31,6 +31,37 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const assignmentCollection=client.db('studyMate').collection('assignments')
+
+    // Post assignments
+    app.post('/assignments',async(req,res)=>{
+        console.log(req.body)
+        const result=await assignmentCollection.insertOne(req.body)
+        console.log(result)
+        res.send(result)
+    })
+    app.get('/assignments',async(req,res)=>{
+        const cursor=assignmentCollection.find()
+        const result=await cursor.toArray();
+        res.send(result)
+    })
+
+
+    // Get assignments by email
+    app.get('/myAssignment/:email',async(req,res)=>{
+        console.log(req.params.email)
+        const result=await assignmentCollection.find({email:req.params.email}).toArray()
+        res.send(result)
+    })
+
+    // Delete a assignment
+    app.delete('/myAssignments/:id',async(req,res)=>{
+        const id=req.params.id;
+        const query={_id:new ObjectId(id)}
+        const result=await assignmentCollection.deleteOne(query)
+        res.send(result)
+      })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
