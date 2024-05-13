@@ -31,6 +31,22 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+const verifyToken=(req,res,next)=>{
+    const token=req?.cookies?.token
+    console.log('Token in the Middleware',token)
+    if(!token){
+        return res.status(401).send({message:'Not Authorized'})
+    }
+    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+        if(err){
+            return res.send({message:'Unauthorized Access'})
+        }
+        req.user=decoded;
+        next()
+    })
+}
+
 async function run() {
   try {
     const assignmentCollection=client.db('studyMate').collection('assignments')
@@ -63,7 +79,7 @@ async function run() {
         console.log(result)
         res.send(result)
     })
-    app.get('/assignments',async(req,res)=>{
+    app.get('/assignments',verifyToken,async(req,res)=>{
         const cursor=assignmentCollection.find()
         const result=await cursor.toArray();
         res.send(result)
