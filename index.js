@@ -32,6 +32,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const assignmentCollection=client.db('studyMate').collection('assignments')
+    const submittedCollection=client.db('studyMate').collection('submit')
 
     // Post assignments
     app.post('/assignments',async(req,res)=>{
@@ -43,6 +44,13 @@ async function run() {
     app.get('/assignments',async(req,res)=>{
         const cursor=assignmentCollection.find()
         const result=await cursor.toArray();
+        res.send(result)
+    })
+
+    // Save submitted Assignment
+    app.post('/submit',async(req,res)=>{
+        const submitData=req.body;
+        const result=await submittedCollection.insertOne(submitData)
         res.send(result)
     })
 
@@ -61,6 +69,14 @@ async function run() {
         const result=await assignmentCollection.deleteOne(query)
         res.send(result)
       })
+
+    // Get assignment by Specific User
+    app.get('/submitAssignment/:email',async(req,res)=>{
+        const email=req.params.email
+        const query={email:email}
+        const result=await submittedCollection.find(query).toArray()
+        res.send(result)
+    })
     
     // Update Assignment
     app.get('/singleAssignment/:id',async(req,res)=>{
@@ -68,6 +84,7 @@ async function run() {
         const result=await assignmentCollection.findOne({_id:new ObjectId(req.params.id)})
         res.send(result)
       })
+
 
     app.put('/updateAssignment/:id',async(req,res)=>{
         const id=req.params.id;
@@ -86,6 +103,22 @@ async function run() {
         console.log(result)
         res.send(result)
       })
+    
+    // Update Saved Assignment
+    app.put('/confirmed/:id',async(req,res)=>{
+        const id=req.params.id;
+        const query={_id: new ObjectId(id)}
+        const updatedData={
+            $set:{
+                status:req.body.status,
+                givenMark:req.body.givenMark,
+                feedback:req.body.feedback
+            }
+        }
+        const result=await submittedCollection.updateOne(query,updatedData)
+        console.log(result)
+        res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
