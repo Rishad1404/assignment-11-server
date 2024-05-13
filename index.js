@@ -14,8 +14,8 @@ const corsOptions={
 }
 
 app.use(cors(corsOptions))
-app.use(express.json())
-app.use(cookieParser())
+app.use(express.json());
+app.use(cookieParser());
 
 // 5r7IH2uphKnJw06D
 // studyMate
@@ -96,12 +96,13 @@ async function run() {
     // Get assignments by email
     app.get('/myAssignment/:email',async(req,res)=>{
         console.log(req.params.email)
+        console.log('token owner info',req.user)
         const result=await assignmentCollection.find({email:req.params.email}).toArray()
         res.send(result)
     })
 
     // Delete a assignment
-    app.delete('/myAssignments/:id',async(req,res)=>{
+    app.delete('/myAssignments/:id',verifyToken,async(req,res)=>{
         const id=req.params.id;
         const query={_id:new ObjectId(id)}
         const result=await assignmentCollection.deleteOne(query)
