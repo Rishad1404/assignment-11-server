@@ -34,7 +34,6 @@ const client = new MongoClient(uri, {
 
 const verifyToken=(req,res,next)=>{
     const token=req?.cookies?.token
-    console.log('Token in the Middleware',token)
     if(!token){
         return res.status(401).send({message:'Not Authorized'})
     }
@@ -110,8 +109,12 @@ async function run() {
       })
 
     // Get assignment by Specific User
-    app.get('/submitAssignment/:email',async(req,res)=>{
+    app.get('/submitAssignment/:email',verifyToken,async(req,res)=>{
         const email=req.params.email
+        const tokenEmail=req.user.email
+        if(tokenEmail!==email){
+          return res.status(403).send({message:'Forbidden Access'})
+        }
         const query={email:email}
         const result=await submittedCollection.find(query).toArray()
         res.send(result)
@@ -144,7 +147,7 @@ async function run() {
       })
     
     // Update Saved Assignment
-    app.put('/confirmed/:id',async(req,res)=>{
+    app.put('/confirmed/:id',verifyToken,async(req,res)=>{
         const id=req.params.id;
         const query={_id: new ObjectId(id)}
         const updatedData={
