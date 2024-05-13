@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const jwt=require('jsonwebtoken')
+const cookieParser=require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express()
 require('dotenv').config()
@@ -7,13 +9,13 @@ const port=process.env.PORT||5000;
 
 // MiddleWare
 const corsOptions={
-    origin:['http://localhost:5173','http://localhost:5174'],
+    origin:['http://localhost:5173','http://localhost:5177',],
     credentials:true,
-    optionSuccessStatus:200,
 }
 
 app.use(cors(corsOptions))
 app.use(express.json())
+app.use(cookieParser())
 
 // 5r7IH2uphKnJw06D
 // studyMate
@@ -33,6 +35,26 @@ async function run() {
   try {
     const assignmentCollection=client.db('studyMate').collection('assignments')
     const submittedCollection=client.db('studyMate').collection('submit')
+
+    // JWT token
+    app.post('/jwt',async(req,res)=>{
+        const user=req.body
+        const token=jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{
+            expiresIn:'7d'
+        })
+        res.cookie('token',token,{
+            httpOnly:true,
+            secure:true,
+            sameSite:'none'
+        })
+        res.send({success:true});
+    })
+    app.post('/logout',async(req,res)=>{
+         const user=req.body;
+         console.log('logging out',user);
+         res.clearCookie('token',{maxAge:0}).send({success:true})
+    })
+
 
     // Post assignments
     app.post('/assignments',async(req,res)=>{
